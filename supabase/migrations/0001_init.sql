@@ -159,8 +159,17 @@ as $$
 $$;
 
 -- projects policies
+-- Note: intentionally inlined rather than calling can_view_project(id) here.
+-- Routing this SELECT policy through a SECURITY DEFINER helper that re-queries
+-- projects fails to see a row inserted earlier in the same statement, which
+-- breaks `insert into projects ... returning *` (used by any client that
+-- selects back the row it just created, e.g. supabase-js's .insert().select()).
 create policy "view projects you can see" on projects
-  for select using (can_view_project(id));
+  for select using (
+    is_public
+    or owner_id = auth.uid()
+    or exists (select 1 from participants pt where pt.project_id = projects.id and pt.user_id = auth.uid())
+  );
 
 create policy "owner creates projects" on projects
   for insert with check (owner_id = auth.uid());
