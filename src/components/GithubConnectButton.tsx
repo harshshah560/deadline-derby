@@ -12,45 +12,55 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
   const [repos, setRepos] = useState<string[] | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [changing, setChanging] = useState(false);
+
+  const needsPicker = !participant.github_repo_full_name || changing;
 
   useEffect(() => {
-    if (participant.github_repo_full_name) return;
+    if (!needsPicker) return;
     let cancelled = false;
+    setRepos(null);
     listMyGithubRepos(participant.id)
       .then((r) => !cancelled && setRepos(r))
       .catch(() => !cancelled && setRepos(null));
     return () => {
       cancelled = true;
     };
-  }, [participant.id, participant.github_repo_full_name]);
+  }, [participant.id, needsPicker]);
 
-  if (!participant.github_repo_full_name) {
+  const selectRepo = async (repo: string) => {
+    setSaving(true);
+    await supabase.from("participants").update({ github_repo_full_name: repo }).eq("id", participant.id);
+    setSaving(false);
+    setChanging(false);
+    onSynced?.();
+  };
+
+  if (needsPicker) {
     if (repos) {
       return (
-        <select
-          disabled={saving}
-          defaultValue=""
-          onChange={async (e) => {
-            if (!e.target.value) return;
-            setSaving(true);
-            await supabase
-              .from("participants")
-              .update({ github_repo_full_name: e.target.value })
-              .eq("id", participant.id);
-            setSaving(false);
-            onSynced?.();
-          }}
-          className="rounded-[var(--radius-md)] border border-black/10 bg-white px-2 py-1 text-sm dark:bg-black/20"
-        >
-          <option value="" disabled>
-            Pick a repo…
-          </option>
-          {repos.map((r) => (
-            <option key={r} value={r}>
-              {r}
+        <div className="flex items-center gap-2">
+          <select
+            disabled={saving}
+            defaultValue={participant.github_repo_full_name ?? ""}
+            onChange={(e) => e.target.value && selectRepo(e.target.value)}
+            className="rounded-[var(--radius-md)] border border-black/10 bg-white px-2 py-1 text-sm dark:bg-black/20"
+          >
+            <option value="" disabled>
+              Pick a repo…
             </option>
-          ))}
-        </select>
+            {repos.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+          {changing && (
+            <button onClick={() => setChanging(false)} className="text-xs opacity-60 hover:opacity-100">
+              Cancel
+            </button>
+          )}
+        </div>
       );
     }
     return (
@@ -78,6 +88,9 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
       <span className="opacity-70">🐙 {participant.github_repo_full_name}</span>
       <button onClick={handleSync} disabled={syncing} className="btn-fun bg-black/5 text-xs">
         {syncing ? "Syncing…" : "Sync now"}
+      </button>
+      <button onClick={() => setChanging(true)} className="text-xs opacity-60 hover:opacity-100">
+        Change
       </button>
     </div>
   );
