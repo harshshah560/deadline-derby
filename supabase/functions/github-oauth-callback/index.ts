@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   }
 
   const ghUserRes = await fetch("https://api.github.com/user", {
-    headers: { Authorization: `Bearer ${accessToken}`, "User-Agent": "bingo-cal" },
+    headers: { Authorization: `Bearer ${accessToken}`, "User-Agent": "deadline-derby" },
   });
   const ghUser = await ghUserRes.json();
 

@@ -1,4 +1,4 @@
-# Bingo-Cal 🏁
+# Deadline Derby 🏁
 
 A fun, Canva-style calendar for racing your side projects to the finish line. Set
 checkpoints, watch an animated avatar race across the calendar as you complete

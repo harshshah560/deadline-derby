@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
   const ghHeaders = {
     Authorization: `Bearer ${connection.github_access_token}`,
-    "User-Agent": "bingo-cal",
+    "User-Agent": "deadline-derby",
     Accept: "application/vnd.github+json",
   };
 

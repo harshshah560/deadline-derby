@@ -68,7 +68,7 @@ export function PublicShareView() {
   return (
     <div className="min-h-screen">
       <header className="px-6 py-4">
-        <span className="font-display text-2xl font-semibold">🏁 Bingo-Cal</span>
+        <span className="font-display text-2xl font-semibold">🏁 Deadline Derby</span>
       </header>
       <main className="mx-auto max-w-5xl px-6 pb-16">
         <h1 className="font-display text-3xl font-semibold">{project.name}</h1>

@@ -7,7 +7,7 @@ export function AppHeader() {
   return (
     <header className="flex items-center justify-between px-6 py-4">
       <Link to="/" className="font-display text-2xl font-semibold flex items-center gap-2">
-        <span className="sticker">🏁</span> Bingo-Cal
+        <span className="sticker">🏁</span> Deadline Derby
       </Link>
       <div className="flex items-center gap-3">
         {profile && (
