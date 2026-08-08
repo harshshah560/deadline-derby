@@ -10,7 +10,7 @@ export function Home() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[] | null>(null);
 
-  useEffect(() => {
+  const reload = () => {
     if (!user) return;
     supabase
       .from("projects")
@@ -18,7 +18,17 @@ export function Home() {
       .eq("participants.user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => setProjects((data ?? []) as unknown as Project[]));
-  }, [user]);
+  };
+
+  useEffect(reload, [user]);
+
+  const handleDelete = async (project: Project) => {
+    if (!confirm(`Delete "${project.name}"? This removes its checkpoints, racers, and progress for everyone. This can't be undone.`)) {
+      return;
+    }
+    await supabase.from("projects").delete().eq("id", project.id);
+    reload();
+  };
 
   return (
     <div className="min-h-screen">
@@ -46,16 +56,23 @@ export function Home() {
           {projects?.map((p) => {
             const daysLeft = differenceInCalendarDays(new Date(p.end_date), new Date());
             return (
-              <Link
-                key={p.id}
-                to={`/project/${p.id}`}
-                className="card-pop block bg-white/80 p-5 dark:bg-white/10"
-              >
-                <h2 className="font-display text-xl font-semibold">{p.name}</h2>
-                <p className="mt-1 text-sm opacity-70">
-                  {daysLeft >= 0 ? `${daysLeft} days left 🏎️` : "Finished 🏆"}
-                </p>
-              </Link>
+              <div key={p.id} className="card-pop relative block bg-white/80 p-5 dark:bg-white/10">
+                <Link to={`/project/${p.id}`} className="block">
+                  <h2 className="font-display text-xl font-semibold pr-6">{p.name}</h2>
+                  <p className="mt-1 text-sm opacity-70">
+                    {daysLeft >= 0 ? `${daysLeft} days left 🏎️` : "Finished 🏆"}
+                  </p>
+                </Link>
+                {p.owner_id === user?.id && (
+                  <button
+                    onClick={() => handleDelete(p)}
+                    title="Delete race"
+                    className="absolute top-4 right-4 text-sm opacity-40 hover:opacity-100 hover:text-red-500"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
