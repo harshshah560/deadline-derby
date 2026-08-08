@@ -39,12 +39,12 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
   if (needsPicker) {
     if (repos) {
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1.5">
           <select
             disabled={saving}
             defaultValue={participant.github_repo_full_name ?? ""}
             onChange={(e) => e.target.value && selectRepo(e.target.value)}
-            className="rounded-[var(--radius-md)] border border-black/10 bg-white px-2 py-1 text-sm dark:bg-black/20"
+            className="w-full rounded-[var(--radius-md)] border border-black/10 bg-white px-2 py-1.5 text-sm dark:bg-black/20"
           >
             <option value="" disabled>
               Pick a repo…
@@ -56,7 +56,10 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
             ))}
           </select>
           {changing && (
-            <button onClick={() => setChanging(false)} className="text-xs opacity-60 hover:opacity-100">
+            <button
+              onClick={() => setChanging(false)}
+              className="self-start text-xs opacity-60 hover:opacity-100"
+            >
               Cancel
             </button>
           )}
@@ -84,14 +87,22 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <span className="opacity-70">🐙 {participant.github_repo_full_name}</span>
-      <button onClick={handleSync} disabled={syncing} className="btn-fun bg-black/5 text-xs">
-        {syncing ? "Syncing…" : "Sync now"}
-      </button>
-      <button onClick={() => setChanging(true)} className="text-xs opacity-60 hover:opacity-100">
-        Change
-      </button>
+    <div className="flex flex-col gap-2 text-sm">
+      <span className="truncate opacity-70" title={participant.github_repo_full_name ?? undefined}>
+        🐙 {participant.github_repo_full_name}
+      </span>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="btn-fun bg-black/5 px-3 py-1 text-xs"
+        >
+          {syncing ? "Syncing…" : "Sync now"}
+        </button>
+        <button onClick={() => setChanging(true)} className="text-xs opacity-60 hover:opacity-100">
+          Change
+        </button>
+      </div>
     </div>
   );
 }
