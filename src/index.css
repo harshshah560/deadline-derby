@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Baloo+2:wght@400..800&display=swap");
+
+:root {
+  --color-bg-1: #fff1e6;
+  --color-bg-2: #e6f4ff;
+  --color-primary: #ff6b6b;
+  --color-primary-dark: #e94f4f;
+  --color-accent: #4ecdc4;
+  --color-accent-2: #ffd166;
+  --color-purple: #a78bfa;
+  --color-ink: #2b2140;
+  --font-display: "Fredoka", "Baloo 2", ui-rounded, system-ui, sans-serif;
+  --font-body: "Baloo 2", "Fredoka", ui-rounded, system-ui, sans-serif;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --shadow-soft: 0 8px 24px rgba(43, 33, 64, 0.12);
+  --shadow-pop: 0 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-1: #241b33;
+    --color-bg-2: #1c2436;
+    --color-ink: #f4f0ff;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: linear-gradient(135deg, var(--color-bg-1), var(--color-bg-2));
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+.card-pop {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.card-pop:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(43, 33, 64, 0.16);
+}
+
+.btn-fun {
+  font-family: var(--font-display);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  box-shadow: var(--shadow-pop);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.btn-fun:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.sticker {
+  transform: rotate(-4deg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
