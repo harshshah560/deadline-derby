@@ -66,6 +66,20 @@ export function GithubConnectButton({ participant, onSynced }: Props) {
         </div>
       );
     }
+    // Already connected and just switching repos: the list is still loading
+    // (repos === null), so show a loading state, never the "Connect a repo"
+    // button — clicking that mid-flash would kick off a whole new OAuth
+    // grant instead of just picking a different repo.
+    if (changing) {
+      return (
+        <div className="flex items-center gap-2">
+          <p className="text-sm opacity-60">Loading your repos…</p>
+          <button onClick={() => setChanging(false)} className="text-xs opacity-60 hover:opacity-100">
+            Cancel
+          </button>
+        </div>
+      );
+    }
     return (
       <button
         onClick={() => startGithubRepoConnect(participant.id)}
