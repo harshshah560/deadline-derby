@@ -57,7 +57,8 @@ create table projects (
   end_date date not null,
   theme text not null default 'confetti',
   is_public boolean not null default false,
-  share_token text not null unique default encode(gen_random_bytes(9), 'base64'),
+  -- hex, not base64: base64's '+' and '/' break URL paths in share links
+  share_token text not null unique default encode(gen_random_bytes(9), 'hex'),
   created_at timestamptz not null default now(),
   constraint valid_range check (end_date > start_date)
 );
@@ -123,7 +124,8 @@ create table invites (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   role text not null check (role in ('racer', 'viewer')),
-  token text not null unique default encode(gen_random_bytes(9), 'base64'),
+  -- hex, not base64: base64's '+' and '/' break the /invite/:token URL
+  token text not null unique default encode(gen_random_bytes(9), 'hex'),
   created_by uuid references profiles(id),
   expires_at timestamptz,
   created_at timestamptz not null default now()
