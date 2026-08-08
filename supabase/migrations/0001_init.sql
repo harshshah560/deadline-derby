@@ -208,6 +208,30 @@ create policy "owner or self updates participant row" on participants
 create policy "owner or self removes participant row" on participants
   for delete using (is_project_owner(project_id) or user_id = auth.uid());
 
+-- The update policy above lets a racer/viewer update their own row (e.g. to
+-- set github_repo_full_name), but row-level USING/CHECK can't restrict which
+-- *columns* change. Without this trigger, that same self-update path lets a
+-- participant set their own role to 'owner'. Only the project owner may
+-- change anyone's role.
+create or replace function public.prevent_role_self_escalation()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.role <> old.role and not exists (
+    select 1 from projects p where p.id = new.project_id and p.owner_id = auth.uid()
+  ) then
+    raise exception 'Only the project owner can change a participant role';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_prevent_role_self_escalation
+  before update on participants
+  for each row execute function public.prevent_role_self_escalation();
+
 -- checkpoint_completions policies
 create policy "view completions of visible projects" on checkpoint_completions
   for select using (

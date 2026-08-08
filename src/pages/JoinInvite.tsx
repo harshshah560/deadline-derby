@@ -37,17 +37,27 @@ export function JoinInvite() {
   const join = async () => {
     if (!invite || !user) return;
     setStatus("joining");
-    const { error: joinError } = await supabase
+
+    // Never touch role for someone who's already a participant (e.g. the
+    // project owner opening their own invite link) — just take them in.
+    const { data: existing } = await supabase
       .from("participants")
-      .upsert(
-        { project_id: invite.project_id, user_id: user.id, role: invite.role },
-        { onConflict: "project_id,user_id" },
-      );
-    if (joinError) {
-      setError(joinError.message);
-      setStatus("error");
-      return;
+      .select("id")
+      .eq("project_id", invite.project_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!existing) {
+      const { error: joinError } = await supabase
+        .from("participants")
+        .insert({ project_id: invite.project_id, user_id: user.id, role: invite.role });
+      if (joinError) {
+        setError(joinError.message);
+        setStatus("error");
+        return;
+      }
     }
+
     navigate(`/project/${invite.project_id}`);
   };
 
