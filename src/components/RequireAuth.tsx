@@ -8,7 +8,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center text-2xl font-display">
-        Loading the racetrack… 🏁
+        Loading… 🚀
       </div>
     );
   }

@@ -1,9 +1,9 @@
 # Deadline Derby 🏁
 
-A fun, Canva-style calendar for racing your side projects to the finish line. Set
-checkpoints, watch an animated avatar race across the calendar as you complete
-them, connect a GitHub repo for auto-progress, and invite people to watch or
-race alongside you.
+A fun, Canva-style project planner. Describe a project and let AI draft the
+checkpoints and tasks, watch them land on the calendar, plan day by day,
+connect a GitHub repo for auto-progress, and invite people to collaborate or
+just watch.
 
 Stack: React + Vite, Supabase (Postgres, Auth, Realtime, Edge Functions), deployed on Vercel.
 
@@ -51,7 +51,23 @@ long-lived access token per participant, kept server-side only.
    supabase secrets set GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=...
    ```
 
-### 4. Deploy
+### 4. Enable "Plan with AI"
+
+This calls the Anthropic API from a server-side Edge Function (the key never
+reaches the browser):
+
+```bash
+supabase functions deploy generate-plan
+supabase secrets set ANTHROPIC_API_KEY=...
+```
+
+### 5. Apply the Phase 1 PM schema
+
+```bash
+supabase db push   # or paste supabase/migrations/0002_pm.sql into the SQL Editor
+```
+
+### 6. Deploy
 
 Push this repo to GitHub, then import it on [vercel.com](https://vercel.com) — it
 auto-detects the Vite build. Add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
@@ -61,14 +77,23 @@ callback URLs and to Supabase Auth's redirect allow-list.
 
 ## How it works
 
-- **Race calendars** — each project you create is its own calendar with a
-  start/finish date; you can have as many as you want.
-- **Checkpoints** — milestones pinned to a date, marked done manually or
-  automatically from GitHub commit activity.
-- **The race** — an SVG track snakes across the calendar weeks; each racer's
-  avatar sits at their furthest completed checkpoint.
-- **Invites** — invite people as a *racer* (their own avatar/track on your
-  calendar) or a *viewer* (read-only). A public share link also exists per
-  project for read-only access with no account needed.
+- **Projects** — each has a start/finish date and its own calendar; you can
+  have as many as you want.
+- **Plan with AI** — describe what you're building and Claude drafts a set of
+  checkpoints (milestones) with tasks under each, which you can edit and
+  refine before applying it to the calendar.
+- **Checkpoints & tasks** — checkpoints are milestones pinned to a date
+  (marked done manually or automatically from GitHub commit activity); tasks
+  are day-level to-dos under a checkpoint and show up on their due date.
+- **Day-by-day planning** — click any day on the calendar to see and add
+  tasks/checkpoints due that day.
+- **Team progress** — a lightweight progress bar and streak per collaborator,
+  no racing required.
+- **Comments** — a lightweight thread per checkpoint (and one project-wide),
+  open to anyone who can see the project, including read-only viewers.
+- **Invites** — invite people as a *collaborator* (can add progress/tasks) or
+  a *viewer* (read-only, can still comment). A public share link also exists
+  per project for read-only access with no account needed.
 
-See `supabase/migrations/0001_init.sql` for the full data model and RLS rules.
+See `supabase/migrations/0001_init.sql` and `0002_pm.sql` for the full data
+model and RLS rules.

@@ -69,17 +69,17 @@ export function JoinInvite() {
         {status === "error" && <p className="text-red-500">{error}</p>}
         {(status === "ready" || status === "joining") && project && invite && (
           <div className="card-pop bg-white/80 p-8 dark:bg-white/10">
-            <div className="sticker mb-3 text-5xl">{invite.role === "racer" ? "🏎️" : "👀"}</div>
+            <div className="sticker mb-3 text-5xl">{invite.role === "racer" ? "🙌" : "👀"}</div>
             <h1 className="font-display text-2xl font-semibold">Join "{project.name}"</h1>
             <p className="mt-2 opacity-70">
-              You've been invited as a {invite.role === "racer" ? "racer — you'll get your own track!" : "viewer."}
+              You've been invited as a {invite.role === "racer" ? "collaborator — you can add progress and tasks." : "viewer."}
             </p>
             <button
               onClick={join}
               disabled={status === "joining"}
               className="btn-fun mt-5 bg-[var(--color-primary)] text-white"
             >
-              {status === "joining" ? "Joining…" : "Join the race"}
+              {status === "joining" ? "Joining…" : "Join the project"}
             </button>
           </div>
         )}

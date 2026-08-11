@@ -5,14 +5,15 @@ import { useProject } from "../hooks/useProject";
 import { supabase } from "../lib/supabaseClient";
 import { AppHeader } from "../components/AppHeader";
 import { MonthCalendar } from "../components/calendar/MonthCalendar";
-import { RaceTrack } from "../components/race/RaceTrack";
+import { DayPanel } from "../components/calendar/DayPanel";
 import { CheckpointForm } from "../components/CheckpointForm";
 import { InviteModal } from "../components/InviteModal";
 import { GithubConnectButton } from "../components/GithubConnectButton";
-import { fireConfetti } from "../components/race/ConfettiBurst";
-import type { ProgressSource } from "../lib/database.types";
-
-const CALENDAR_ID = "race-calendar-grid";
+import { TeamProgress } from "../components/TeamProgress";
+import { CommentThread } from "../components/CommentThread";
+import { PlanAssistant } from "../components/PlanAssistant";
+import { fireConfetti } from "../components/celebration/ConfettiBurst";
+import type { ProgressSource, Task } from "../lib/database.types";
 
 export function ProjectView() {
   const { projectId } = useParams();
@@ -20,6 +21,9 @@ export function ProjectView() {
   const { bundle, loading, reload } = useProject(projectId);
   const [showCheckpointForm, setShowCheckpointForm] = useState<string | undefined>();
   const [showInvite, setShowInvite] = useState(false);
+  const [showPlanAssistant, setShowPlanAssistant] = useState(false);
+  const [showDay, setShowDay] = useState<string | undefined>();
+  const [openThread, setOpenThread] = useState<string | undefined>();
 
   const me = useMemo(
     () => bundle?.participants.find((p) => p.user_id === user?.id),
@@ -31,12 +35,12 @@ export function ProjectView() {
     return (
       <div className="min-h-screen">
         <AppHeader />
-        <p className="px-6 opacity-60">Loading the track…</p>
+        <p className="px-6 opacity-60">Loading your project…</p>
       </div>
     );
   }
 
-  const { project, checkpoints, participants, completions } = bundle;
+  const { project, checkpoints, participants, completions, tasks, comments } = bundle;
 
   const handleAddCheckpoint = async (values: {
     title: string;
@@ -52,6 +56,7 @@ export function ProjectView() {
       created_by: user?.id,
     });
     setShowCheckpointForm(undefined);
+    setShowDay(undefined);
     reload();
   };
 
@@ -67,6 +72,27 @@ export function ProjectView() {
     reload();
   };
 
+  const handleToggleTask = async (task: Task) => {
+    const done = task.status === "done";
+    await supabase
+      .from("tasks")
+      .update({ status: done ? "todo" : "done", completed_at: done ? null : new Date().toISOString() })
+      .eq("id", task.id);
+    if (!done) fireConfetti();
+    reload();
+  };
+
+  const handleAddTask = async (title: string, checkpointId: string, dueDate?: string) => {
+    await supabase.from("tasks").insert({
+      checkpoint_id: checkpointId,
+      title,
+      due_date: dueDate ?? null,
+      sort_order: tasks.filter((t) => t.checkpoint_id === checkpointId).length,
+      created_by: user?.id,
+    });
+    reload();
+  };
+
   const togglePublic = async () => {
     await supabase.from("projects").update({ is_public: !project.is_public }).eq("id", project.id);
     reload();
@@ -75,7 +101,8 @@ export function ProjectView() {
   const isDone = (checkpointId: string, participantId: string) =>
     completions.some((c) => c.checkpoint_id === checkpointId && c.participant_id === participantId && c.completed_at);
 
-  const racers = participants.filter((p) => p.role !== "viewer");
+  const collaborators = participants.filter((p) => p.role !== "viewer");
+  const canEdit = !!me && me.role !== "viewer";
 
   return (
     <div className="min-h-screen">
@@ -89,6 +116,11 @@ export function ProjectView() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {isOwner && (
+              <button onClick={() => setShowPlanAssistant(true)} className="btn-fun bg-[var(--color-purple)] text-white">
+                ✨ Plan with AI
+              </button>
+            )}
             {isOwner && (
               <button onClick={() => setShowCheckpointForm(project.start_date)} className="btn-fun bg-[var(--color-accent-2)]">
                 + Checkpoint
@@ -107,47 +139,22 @@ export function ProjectView() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-          <div className="relative">
-            <MonthCalendar
-              startDate={project.start_date}
-              endDate={project.end_date}
-              checkpoints={checkpoints}
-              onDayClick={isOwner ? (day) => setShowCheckpointForm(day) : undefined}
-            />
-            <RaceTrack
-              containerId={CALENDAR_ID}
-              startDate={project.start_date}
-              endDate={project.end_date}
-              checkpoints={checkpoints}
-              participants={participants}
-              completions={completions}
-            />
-          </div>
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+          <MonthCalendar
+            startDate={project.start_date}
+            endDate={project.end_date}
+            checkpoints={checkpoints}
+            tasks={tasks}
+            onDayClick={(day) => setShowDay(day)}
+          />
 
           <aside className="flex flex-col gap-4">
-            <div className="card-pop bg-white/80 p-4 dark:bg-white/10">
-              <h2 className="font-display mb-2 text-sm font-semibold uppercase opacity-60">Racers</h2>
-              <ul className="flex flex-col gap-2">
-                {racers.map((p) => {
-                  const done = completions.filter((c) => c.participant_id === p.id && c.completed_at).length;
-                  return (
-                    <li key={p.id} className="flex items-center gap-2 text-sm">
-                      <span
-                        className="flex h-7 w-7 items-center justify-center rounded-full"
-                        style={{ background: p.profile?.avatar_color }}
-                      >
-                        {p.profile?.avatar_emoji}
-                      </span>
-                      <span className="flex-1">{p.profile?.username ?? "Racer"}</span>
-                      <span className="opacity-60">
-                        {done}/{checkpoints.length}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <TeamProgress
+              collaborators={collaborators}
+              totalCheckpoints={checkpoints.length}
+              completions={completions}
+              tasks={tasks}
+            />
 
             {me && me.role !== "viewer" && (
               <div className="card-pop bg-white/80 p-4 dark:bg-white/10">
@@ -158,24 +165,77 @@ export function ProjectView() {
 
             <div className="card-pop bg-white/80 p-4 dark:bg-white/10">
               <h2 className="font-display mb-2 text-sm font-semibold uppercase opacity-60">Checkpoints</h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-3">
                 {checkpoints.map((c) => {
                   const mine = me ? isDone(c.id, me.id) : false;
+                  const checkpointTasks = tasks.filter((t) => t.checkpoint_id === c.id);
                   return (
-                    <li key={c.id} className="flex items-center justify-between gap-2 text-sm">
-                      <span className={mine ? "line-through opacity-50" : ""}>
-                        {c.title} · {c.target_date}
-                      </span>
-                      {me && me.role !== "viewer" && !mine && c.progress_source === "manual" && (
-                        <button onClick={() => handleMarkDone(c.id)} className="btn-fun bg-black/5 text-xs">
-                          Mark done
-                        </button>
+                    <li key={c.id} className="flex flex-col gap-1 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={mine ? "line-through opacity-50" : ""}>
+                          {c.title} · {c.target_date}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {canEdit && !mine && c.progress_source === "manual" && (
+                            <button onClick={() => handleMarkDone(c.id)} className="btn-fun bg-black/5 text-xs">
+                              Done
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setOpenThread(openThread === c.id ? undefined : c.id)}
+                            className="text-xs opacity-50 hover:opacity-100"
+                            title="Comments"
+                          >
+                            💬
+                          </button>
+                        </div>
+                      </div>
+                      {checkpointTasks.length > 0 && (
+                        <ul className="ml-3 flex flex-col gap-0.5">
+                          {checkpointTasks.map((t) => (
+                            <li key={t.id} className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={t.status === "done"}
+                                disabled={!canEdit}
+                                onChange={() => handleToggleTask(t)}
+                              />
+                              <span className={t.status === "done" ? "line-through opacity-50" : ""}>{t.title}</span>
+                              {t.due_date && <span className="opacity-40">{t.due_date}</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {openThread === c.id && (
+                        <div className="ml-3 mt-1">
+                          <CommentThread
+                            projectId={project.id}
+                            checkpointId={c.id}
+                            comments={comments}
+                            myParticipantId={me?.id}
+                            onPosted={reload}
+                          />
+                        </div>
                       )}
                     </li>
                   );
                 })}
-                {checkpoints.length === 0 && <li className="text-sm opacity-50">No checkpoints yet.</li>}
+                {checkpoints.length === 0 && (
+                  <li className="text-sm opacity-50">
+                    No checkpoints yet.{" "}
+                    {isOwner && (
+                      <button onClick={() => setShowPlanAssistant(true)} className="underline">
+                        Plan with AI
+                      </button>
+                    )}
+                  </li>
+                )}
               </ul>
+            </div>
+
+            <div className="card-pop bg-white/80 p-4 dark:bg-white/10">
+              <h2 className="font-display mb-2 text-sm font-semibold uppercase opacity-60">Project chat</h2>
+              <CommentThread projectId={project.id} comments={comments} myParticipantId={me?.id} onPosted={reload} />
             </div>
           </aside>
         </div>
@@ -192,7 +252,38 @@ export function ProjectView() {
         />
       )}
 
+      {showDay && (
+        <DayPanel
+          dateKey={showDay}
+          checkpoints={checkpoints}
+          tasks={tasks}
+          canEdit={canEdit}
+          onToggleTask={handleToggleTask}
+          onAddTask={(title, checkpointId) => handleAddTask(title, checkpointId, showDay)}
+          onAddCheckpoint={() => {
+            setShowDay(undefined);
+            setShowCheckpointForm(showDay);
+          }}
+          onClose={() => setShowDay(undefined)}
+        />
+      )}
+
       {showInvite && <InviteModal projectId={project.id} onClose={() => setShowInvite(false)} />}
+
+      {showPlanAssistant && user && (
+        <PlanAssistant
+          projectId={project.id}
+          startDate={project.start_date}
+          endDate={project.end_date}
+          existingCheckpointCount={checkpoints.length}
+          userId={user.id}
+          onApplied={() => {
+            setShowPlanAssistant(false);
+            reload();
+          }}
+          onClose={() => setShowPlanAssistant(false)}
+        />
+      )}
     </div>
   );
 }

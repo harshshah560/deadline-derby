@@ -1,7 +1,8 @@
-import { format, isSameDay, isToday } from "date-fns";
+import { format, isToday } from "date-fns";
 import { buildCalendarLayout } from "../../lib/calendarLayout";
-import type { Checkpoint } from "../../lib/database.types";
+import type { Checkpoint, Task } from "../../lib/database.types";
 import { CheckpointBadge } from "./CheckpointBadge";
+import { TaskBadge } from "./TaskBadge";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -9,6 +10,7 @@ interface Props {
   startDate: string;
   endDate: string;
   checkpoints: Checkpoint[];
+  tasks?: Task[];
   onDayClick?: (dateKey: string) => void;
   onCheckpointClick?: (checkpoint: Checkpoint) => void;
   readOnly?: boolean;
@@ -18,6 +20,7 @@ export function MonthCalendar({
   startDate,
   endDate,
   checkpoints,
+  tasks = [],
   onDayClick,
   onCheckpointClick,
   readOnly,
@@ -31,6 +34,14 @@ export function MonthCalendar({
     const list = checkpointsByDay.get(c.target_date) ?? [];
     list.push(c);
     checkpointsByDay.set(c.target_date, list);
+  }
+
+  const tasksByDay = new Map<string, Task[]>();
+  for (const t of tasks) {
+    if (!t.due_date) continue;
+    const list = tasksByDay.get(t.due_date) ?? [];
+    list.push(t);
+    tasksByDay.set(t.due_date, list);
   }
 
   return (
@@ -48,6 +59,7 @@ export function MonthCalendar({
             {week.map((day) => {
               const inRange = day.date >= rangeStart && day.date <= rangeEnd;
               const dayCheckpoints = checkpointsByDay.get(day.key) ?? [];
+              const dayTasks = tasksByDay.get(day.key) ?? [];
               return (
                 <button
                   key={day.key}
@@ -76,6 +88,13 @@ export function MonthCalendar({
                       />
                     ))}
                   </div>
+                  {dayTasks.length > 0 && (
+                    <div className="mt-0.5 flex flex-wrap items-center justify-center gap-0.5">
+                      {dayTasks.slice(0, 4).map((t) => (
+                        <TaskBadge key={t.id} task={t} />
+                      ))}
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -84,8 +103,4 @@ export function MonthCalendar({
       </div>
     </div>
   );
-}
-
-export function isSameDayKey(date: Date, key: string) {
-  return isSameDay(date, new Date(`${key}T00:00:00`));
 }

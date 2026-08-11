@@ -23,7 +23,7 @@ export function Home() {
   useEffect(reload, [user]);
 
   const handleDelete = async (project: Project) => {
-    if (!confirm(`Delete "${project.name}"? This removes its checkpoints, racers, and progress for everyone. This can't be undone.`)) {
+    if (!confirm(`Delete "${project.name}"? This removes its checkpoints, tasks, and progress for everyone. This can't be undone.`)) {
       return;
     }
     await supabase.from("projects").delete().eq("id", project.id);
@@ -35,19 +35,19 @@ export function Home() {
       <AppHeader />
       <main className="mx-auto max-w-5xl px-6 pb-16">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="font-display text-3xl font-semibold">Your race calendars</h1>
+          <h1 className="font-display text-3xl font-semibold">Your projects</h1>
           <Link to="/new" className="btn-fun bg-[var(--color-primary)] text-white">
-            + New race
+            + New project
           </Link>
         </div>
 
-        {projects === null && <p className="opacity-60">Loading your races…</p>}
+        {projects === null && <p className="opacity-60">Loading your projects…</p>}
 
         {projects && projects.length === 0 && (
           <div className="card-pop bg-white/70 p-10 text-center dark:bg-white/10">
-            <p className="mb-4 text-lg">No race calendars yet — start one!</p>
+            <p className="mb-4 text-lg">No projects yet — start one!</p>
             <Link to="/new" className="btn-fun bg-[var(--color-primary)] text-white">
-              Create your first race
+              Create your first project
             </Link>
           </div>
         )}
@@ -60,13 +60,13 @@ export function Home() {
                 <Link to={`/project/${p.id}`} className="block">
                   <h2 className="font-display text-xl font-semibold pr-6">{p.name}</h2>
                   <p className="mt-1 text-sm opacity-70">
-                    {daysLeft >= 0 ? `${daysLeft} days left 🏎️` : "Finished 🏆"}
+                    {daysLeft >= 0 ? `${daysLeft} days left ⏳` : "Finished 🏆"}
                   </p>
                 </Link>
                 {p.owner_id === user?.id && (
                   <button
                     onClick={() => handleDelete(p)}
-                    title="Delete race"
+                    title="Delete project"
                     className="absolute top-4 right-4 text-sm opacity-40 hover:opacity-100 hover:text-red-500"
                   >
                     ✕

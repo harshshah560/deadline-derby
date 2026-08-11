@@ -1,6 +1,7 @@
 export type ParticipantRole = "owner" | "racer" | "viewer";
 export type ProgressSource = "manual" | "github";
 export type CompletedVia = "manual" | "github_commit" | "github_pr" | "github_issue";
+export type TaskStatus = "todo" | "done";
 
 export interface Profile {
   id: string;
@@ -52,6 +53,29 @@ export interface CheckpointCompletion {
   evidence_url: string | null;
 }
 
+export interface Task {
+  id: string;
+  checkpoint_id: string;
+  title: string;
+  due_date: string | null;
+  status: TaskStatus;
+  sort_order: number;
+  assigned_participant_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface Comment {
+  id: string;
+  project_id: string;
+  checkpoint_id: string | null;
+  author_id: string;
+  body: string;
+  created_at: string;
+  author?: Participant;
+}
+
 export interface Invite {
   id: string;
   project_id: string;
@@ -79,6 +103,8 @@ export interface Database {
         Update: Partial<CheckpointCompletion>;
       };
       invites: { Row: Invite; Insert: Partial<Invite>; Update: Partial<Invite> };
+      tasks: { Row: Task; Insert: Partial<Task>; Update: Partial<Task> };
+      comments: { Row: Comment; Insert: Partial<Comment>; Update: Partial<Comment> };
     };
   };
 }

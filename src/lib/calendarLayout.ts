@@ -8,9 +8,9 @@ export interface DayCell {
   isFirstOfMonth: boolean;
 }
 
-// Lays the project's date range out as calendar weeks (Sun-Sat rows), and
-// returns the days in serpentine order (row 0 left->right, row 1 right->left, ...)
-// so a single continuous racetrack path can snake across the grid.
+// Lays the project's date range out as calendar weeks (Sun-Sat rows). Also
+// returns a serpentine ordering (row 0 left->right, row 1 right->left, ...)
+// for any future feature that wants a single continuous path across days.
 export function buildCalendarLayout(startDate: string, endDate: string) {
   const start = startOfWeek(new Date(`${startDate}T00:00:00`));
   const end = new Date(`${endDate}T00:00:00`);

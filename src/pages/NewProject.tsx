@@ -27,7 +27,7 @@ export function NewProject() {
       .single();
 
     if (projectError || !project) {
-      setError(projectError?.message ?? "Could not create race calendar.");
+      setError(projectError?.message ?? "Could not create project.");
       setSaving(false);
       return;
     }
@@ -49,7 +49,7 @@ export function NewProject() {
     <div className="min-h-screen">
       <AppHeader />
       <main className="mx-auto max-w-lg px-6 pb-16">
-        <h1 className="font-display mb-6 text-3xl font-semibold">Start a new race 🏁</h1>
+        <h1 className="font-display mb-6 text-3xl font-semibold">Start a new project 🚀</h1>
         <form onSubmit={handleSubmit} className="card-pop flex flex-col gap-4 bg-white/80 p-6 dark:bg-white/10">
           <label className="flex flex-col gap-1">
             <span className="font-display text-sm font-semibold">Project name</span>
@@ -73,7 +73,7 @@ export function NewProject() {
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="font-display text-sm font-semibold">Finish line date</span>
+              <span className="font-display text-sm font-semibold">Finish date</span>
               <input
                 required
                 type="date"
@@ -86,7 +86,7 @@ export function NewProject() {
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button disabled={saving} type="submit" className="btn-fun bg-[var(--color-primary)] text-white">
-            {saving ? "Setting up the track…" : "Create race"}
+            {saving ? "Setting up…" : "Create project"}
           </button>
         </form>
       </main>

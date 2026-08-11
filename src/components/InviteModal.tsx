@@ -37,7 +37,7 @@ export function InviteModal({ projectId, onClose }: Props) {
             onClick={() => setRole("racer")}
             className={`btn-fun flex-1 text-sm ${role === "racer" ? "bg-[var(--color-primary)] text-white" : "bg-black/5"}`}
           >
-            🏎️ Racer — races alongside you
+            🙌 Collaborator — works alongside you
           </button>
           <button
             onClick={() => setRole("viewer")}
